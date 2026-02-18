@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AUSTRAC Tranche 2 Compliance Assessment</title>
+  <!-- Correct Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .icon-svg {
@@ -18,9 +19,15 @@
   <div id="app"></div>
 
   <script>
+    /******************************************************************
+     * YOUR MICROSOFT FORMS URL
+     ******************************************************************/
     const MICROSOFT_FORMS_URL =
       "https://forms.office.com/Pages/ResponsePage.aspx?id=ZSh16rozSEuh0zUkiiKN9rjtfRF8dfxMuZtKLrOCz91UNFZPMzdWN1JONVpVME9NT1cxNVVJNThQTS4u";
 
+    // ────────────────────────────────────────────────────────────────
+    // Industry → Designated Services map
+    // ────────────────────────────────────────────────────────────────
     const designatedServicesByIndustry = {
       'Real Estate Professionals': [
         'Brokering the sale, purchase or transfer of real estate',
@@ -74,6 +81,9 @@
       ]
     };
 
+    // ────────────────────────────────────────────────────────────────
+    // Question List
+    // ────────────────────────────────────────────────────────────────
     const questions = [
       {
         id: 'industry',
@@ -153,10 +163,16 @@
       }
     ];
 
+    // ────────────────────────────────────────────────────────────────
+    // App State
+    // ────────────────────────────────────────────────────────────────
     let currentStep = 0;
     let answers = {};
     let showResult = false;
 
+    // ────────────────────────────────────────────────────────────────
+    // Helper Functions
+    // ────────────────────────────────────────────────────────────────
     function getDesignatedServicesForIndustries() {
       const selected = answers.industry || [];
       if (selected.length === 0) return [];
@@ -166,19 +182,26 @@
 
     function determinePackage() {
       const designatedServices = answers.designatedServices || [];
+
       if (designatedServices.length === 0) {
         return {
           package: 'none',
           title: 'AML/CTF Obligations May Not Apply',
-          message: 'Based on your responses, you may not be providing designated services under Tranche 2. However, we recommend confirming this with AUSTRAC.',
+          message:
+            'Based on your responses, you may not be providing designated services under Tranche 2. However, we recommend confirming this with AUSTRAC.',
           color: 'bg-gray-50 border-gray-300',
           icon: '📋'
         };
       }
 
       const starterDisqual = [];
-      if (answers.staffSize === 'More than 15') starterDisqual.push('More than 15 staff');
+
+      if (answers.staffSize === 'More than 15') {
+        starterDisqual.push('More than 15 staff');
+      }
+
       const complexity = answers.businessComplexity || [];
+
       const hardDisq = [
         'Remote/fully online service delivery',
         'Own and sell property (property developers)',
@@ -187,7 +210,10 @@
         'Foreign branches or operations',
         'Deal with virtual assets'
       ];
-      hardDisq.forEach(item => { if (complexity.includes(item)) starterDisqual.push(item); });
+
+      hardDisq.forEach(item => {
+        if (complexity.includes(item)) starterDisqual.push(item);
+      });
 
       if (starterDisqual.length > 0) {
         return {
@@ -210,7 +236,10 @@
 
       let factors = 0;
       const customerBase = answers.customerBase || [];
-      if (customerBase.length > 1 || (customerBase.length === 1 && customerBase[0] !== 'Primarily Australian individual customers')) factors++;
+
+      if (customerBase.length > 1 || (customerBase.length === 1 && customerBase[0] !== 'Primarily Australian individual customers')) {
+        factors++;
+      }
       if (complexity.includes('Regular high-risk customers (PEPs, sanctioned)')) factors++;
       if (complexity.includes('Complex ownership structures')) factors++;
 
@@ -218,7 +247,8 @@
         return {
           package: 'package1',
           title: 'Package 1: Starter Kit + VerifiMe Support',
-          message: 'Your business appears to be a good fit for the AUSTRAC Starter Kit program with VerifiMe support.',
+          message:
+            'Your business appears to be a good fit for the AUSTRAC Starter Kit program with VerifiMe support.',
           features: [
             'AUSTRAC starter kit foundation',
             'VerifiMe identity verification platform',
@@ -235,7 +265,8 @@
       return {
         package: 'package2',
         title: 'Package 2: AML/CTF Consultant + VerifiMe Support',
-        message: 'Your business has complexity factors and needs a customised AML/CTF program.',
+        message:
+          'Your business has complexity factors and needs a customised AML/CTF program.',
         features: [
           'Full AML/CTF consultant partnership',
           'Custom AML/CTF program development',
@@ -250,37 +281,12 @@
       };
     }
 
-    function handleAnswer(questionId, value, isMulti) {
-      if (isMulti) {
-        let current = answers[questionId] || [];
-        if (questionId === 'businessComplexity') {
-          if (value === 'None of the above') {
-            current = ['None of the above'];
-          } else {
-            current = current.filter(v => v !== 'None of the above');
-            current = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
-          }
-        } else {
-          current = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
-        }
-        answers[questionId] = current;
-      } else {
-        answers[questionId] = value;
-      }
-
-      if (questionId === 'industry') {
-        const valid = new Set(getDesignatedServicesForIndustries());
-        answers.designatedServices = (answers.designatedServices || []).filter(s => valid.has(s));
-      }
-      render();
-    }
-
-    function handleNext() { if (currentStep < questions.length - 1) { currentStep++; } else { showResult = true; } render(); }
-    function handleBack() { if (currentStep > 0) currentStep--; render(); }
-    function handleReset() { currentStep = 0; answers = {}; showResult = false; render(); }
-
+    // ────────────────────────────────────────────────────────────────
+    // Render
+    // ────────────────────────────────────────────────────────────────
     function render() {
       const app = document.getElementById('app');
+
       if (showResult) {
         const result = determinePackage();
         app.innerHTML = `
@@ -293,22 +299,22 @@
                   <p class="text-lg text-gray-700">${result.message}</p>
                 </div>
                 ${result.features ? `
-                <div class="mt-8 bg-white rounded-lg p-6 shadow-md">
-                  <h3 class="text-xl font-semibold mb-4 text-gray-800">What's Included:</h3>
-                  <ul class="space-y-3">
-                    ${result.features.map(f => `<li class="flex items-start">
-                      <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                      </svg>
-                      <span class="text-gray-700">${f}</span>
-                    </li>`).join('')}
-                  </ul>
-                </div>` : ''}
+                  <div class="mt-8 bg-white rounded-lg p-6 shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">What's Included:</h3>
+                    <ul class="space-y-3">
+                      ${result.features.map(f => `<li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span class="text-gray-700">${f}</span>
+                      </li>`).join("")}
+                    </ul>
+                  </div>` : ''}
                 <div class="mt-8 flex gap-4 justify-center">
                   <button onclick="handleReset()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">
                     Start Over
                   </button>
-                  <a href="${MICROSOFT_FORMS_URL}" target="_blank" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors flex items-center">
+                  <a href="${MICROSOFT_FORMS_URL}" target="_blank" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
                     Contact Us for Assessment
                   </a>
                 </div>
@@ -324,7 +330,7 @@
 
       const q = questions[currentStep];
       const currentOptions = q.type === "dynamic-multi-select" ? getDesignatedServicesForIndustries() : q.options;
-      const isAnswered = (q.type.includes('multi')) ? (answers[q.id] && answers[q.id].length > 0) : answers[q.id];
+      const isAnswered = (q.type.includes('multi') ? (answers[q.id] && answers[q.id].length > 0) : answers[q.id]);
 
       app.innerHTML = `
         <div class="min-h-screen py-12 px-4">
@@ -339,7 +345,7 @@
                 <span class="text-sm font-medium text-gray-700">${Math.round(((currentStep + 1) / questions.length) * 100)}% Complete</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: ${(currentStep + 1)/questions.length*100}%"></div>
+                <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: ${(currentStep + 1) / questions.length * 100}%"></div>
               </div>
             </div>
             <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
@@ -349,7 +355,7 @@
                 ${currentOptions && currentOptions.length ? currentOptions.map(option => {
                   const isMulti = q.type.includes("multi");
                   const selected = isMulti ? (answers[q.id] || []).includes(option) : answers[q.id] === option;
-                  const safe = option.replace(/'/g,"\\'");
+                  const safe = option.replace(/'/g, "\\'");
                   return `
                     <button onclick="handleAnswer('${q.id}','${safe}',${isMulti})" class="w-full text-left p-4 rounded-lg border-2 transition-all ${selected ? 'border-indigo-600 bg-indigo-50' : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'}">
                       <div class="flex items-center">
@@ -360,18 +366,55 @@
                       </div>
                     </button>
                   `;
-                }).join('') : `<div class="text-center py-8 text-gray-500">Please select at least one industry in Question 1 to see relevant services.</div>`}
+                }).join("") : `<div class="text-center py-8 text-gray-500">Please select at least one industry in Question 1 to see relevant services.</div>`}
               </div>
             </div>
             <div class="flex justify-between">
-              <button onclick="handleBack()" ${currentStep === 0 ? "disabled" : ""} class="px-6 py-3 rounded-lg font-medium ${currentStep===0 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-600 text-white hover:bg-gray-700"}">Back</button>
-              <button onclick="handleNext()" ${!isAnswered ? "disabled" : ""} class="px-6 py-3 rounded-lg font-medium flex items-center ${!isAnswered ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-indigo-600 text-white hover:bg-indigo-700"}">${currentStep === questions.length-1 ? "See Results" : "Next"}<svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+              <button onclick="handleBack()" ${currentStep === 0 ? "disabled" : ""} class="px-6 py-3 rounded-lg font-medium ${currentStep === 0 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-600 text-white hover:bg-gray-700"}">Back</button>
+              <button onclick="handleNext()" ${!isAnswered ? "disabled" : ""} class="px-6 py-3 rounded-lg font-medium flex items-center ${!isAnswered ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-indigo-600 text-white hover:bg-indigo-700"}">${currentStep === questions.length - 1 ? "See Results" : "Next"}
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </button>
             </div>
             <div class="mt-8 text-center text-sm text-gray-600"><p>Need help? Contact us at support@verifime.com.au</p></div>
           </div>
         </div>
       `;
-      setTimeout(()=>{const h2=document.getElementById("question-heading"); if(h2) h2.focus();},0);
+
+      // Accessibility: focus question on step change
+      setTimeout(() => { const h2 = document.getElementById("question-heading"); if (h2) h2.focus(); }, 0);
+    }
+
+    function handleAnswer(qid, value, isMulti) {
+      if (isMulti) {
+        let current = answers[qid] || [];
+        if (qid === 'businessComplexity' && value === 'None of the above') current = ['None of the above'];
+        else if (qid === 'businessComplexity') {
+          current = current.filter(v => v !== 'None of the above');
+          current = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
+        } else current = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
+        answers[qid] = current;
+      } else {
+        answers[qid] = value;
+      }
+      render();
+    }
+
+    function handleNext() {
+      if (currentStep < questions.length - 1) currentStep++;
+      else showResult = true;
+      render();
+    }
+
+    function handleBack() {
+      if (currentStep > 0) currentStep--;
+      render();
+    }
+
+    function handleReset() {
+      currentStep = 0;
+      answers = {};
+      showResult = false;
+      render();
     }
 
     render();
