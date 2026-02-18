@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUSTRAC Tranche 2 Compliance Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .icon-svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div id="app"></div>
+
+    <script>
+        // Designated services mapped to each industry
+        const designatedServicesByIndustry = {
+            'Real Estate Professionals': [
+                'Brokering the sale, purchase or transfer of real estate',
+                'Selling or transferring real estate without an independent agent'
+            ],
+            'Conveyancers': [
+                'Assisting in planning/executing transactions to sell, buy or transfer real estate',
+                'Preparing contracts, transfer documents, or lodging registrations',
+                'Acting as settlement agent for property transfers'
+            ],
+            'Lawyers': [
+                'Assisting with real estate transactions (planning/execution)',
+                'Assisting with sale/transfer of body corporates or legal arrangements',
+                'Receiving/managing client funds for transactions',
+                'Equity or debt financing for companies/trusts',
+                'Creating or restructuring companies or legal arrangements',
+                'Acting as director, trustee, or partner on behalf of clients',
+                'Providing registered office or business addresses',
+                'Trust or company formation services'
+            ],
+            'Accountants': [
+                'Assisting with transactions involving bodies corporate or trusts',
+                'Receiving/managing client funds in connection with transactions',
+                'Trust and company formation services',
+                'Equity or debt financing services',
+                'Acting in official roles (director, trustee) for clients'
+            ],
+            'Trust & Company Service Providers': [
+                'Creating or restructuring companies or legal arrangements',
+                'Acting as or arranging directors, trustees, or partners',
+                'Providing registered office addresses',
+                'Company or trust formation services',
+                'Managing client entities on their behalf'
+            ],
+            'Dealers in Precious Metals/Stones': [
+                'Buying/selling precious metals, stones or products with A$10,000+ in cash/virtual assets',
+                'Bullion sales of any value through any payment method'
+            ],
+            'Virtual Asset Service Providers': [
+                'Exchanges between virtual assets and fiat currency',
+                'Exchanges between different virtual assets',
+                'Transfer of virtual assets on behalf of customers',
+                'Safekeeping or administration of virtual assets',
+                'Financial services related to virtual assets'
+            ],
+            'Other Professional Services': [
+                'Assisting with property or corporate transactions',
+                'Managing client funds or property',
+                'Company/trust services',
+                'Please review AUSTRAC guidance for your specific services'
+            ]
+        };
+
+        const questions = [
+            {
+                id: 'industry',
+                question: 'What industry do you belong to?',
+                type: 'multi-select',
+                options: [
+                    'Real Estate Professionals',
+                    'Conveyancers',
+                    'Lawyers',
+                    'Accountants',
+                    'Trust & Company Service Providers',
+                    'Dealers in Precious Metals/Stones',
+                    'Virtual Asset Service Providers',
+                    'Other Professional Services'
+                ]
+            },
+            {
+                id: 'designatedServices',
+                question: 'Do you provide any of these designated services?',
+                type: 'dynamic-multi-select',
+                description: 'Select all services that your business provides'
+            },
+            {
+                id: 'staffSize',
+                question: 'How many personnel work in your business?',
+                type: 'single',
+                description: 'Include all administrative and professional staff',
+                options: ['15 or fewer', 'More than 15']
+            },
+            {
+                id: 'customerBase',
+                question: 'Which best describes your customer base?',
+                type: 'multi-select',
+                description: 'Select all that apply to your business',
+                options: [
+                    'Primarily Australian individual customers',
+                    'Mix of individuals and corporate clients',
+                    'Primarily corporate/trust clients',
+                    'Significant international client base'
+                ]
+            },
+            {
+                id: 'businessComplexity',
+                question: 'Does your business have any of these characteristics?',
+                type: 'multi-select',
+                options: [
+                    'Remote/fully online service delivery',
+                    'Own and sell property (property developers)',
+                    'Broker overseas property',
+                    'Part of group structure/multiple entities',
+                    'Foreign branches or operations',
+                    'Regular high-risk customers (PEPs, sanctioned)',
+                    'Deal with virtual assets',
+                    'Complex ownership structures',
+                    'None of the above'
+                ]
+            },
+            {
+                id: 'enrolled',
+                question: 'Have you enrolled with AUSTRAC?',
+                type: 'single',
+                description: 'Enrollment opens 31 March 2026, deadline 29 July 2026',
+                options: ['Yes', 'No', 'Planning to enroll']
+            },
+            {
+                id: 'riskAssessment',
+                question: 'Have you completed a business risk assessment?',
+                type: 'single',
+                description: 'ML/TF/PF risk assessment covering customers, services, channels, and jurisdictions',
+                options: ['Yes - Completed', 'Partial - Started', 'No - Not started', 'Unsure']
+            },
+            {
+                id: 'training',
+                question: 'Have you or your staff completed AML/CTF training?',
+                type: 'single',
+                options: ['Yes - Comprehensive', 'Partial - Some staff', 'No - Not yet', 'Minimal - Basic awareness only']
+            }
+        ];
+
+        let currentStep = 0;
+        let answers = {};
+        let showResult = false;
+
+        function getDesignatedServicesForIndustries() {
+            const selectedIndustries = answers.industry || [];
+            if (selectedIndustries.length === 0) return [];
+            
+            const allServices = selectedIndustries.flatMap(industry => 
+                designatedServicesByIndustry[industry] || []
+            );
+            
+            return [...new Set(allServices)];
+        }
+
+        function determinePackage() {
+            const designatedServices = answers.designatedServices || [];
+            
+            if (designatedServices.length === 0) {
+                return {
+                    package: 'none',
+                    title: 'AML/CTF Obligations May Not Apply',
+                    message: 'Based on your responses, you may not be providing designated services under Tranche 2. However, we recommend confirming this with AUSTRAC\'s online tool or consulting with a compliance expert.',
+                    color: 'bg-gray-50 border-gray-300'
+                };
+            }
+
+            const starterKitDisqualifiers = [];
+            
+            if (answers.staffSize === 'More than 15') {
+                starterKitDisqualifiers.push('More than 15 staff members');
+            }
+            
+            const businessComplexity = answers.businessComplexity || [];
+            const hardDisqualifiers = [
+                'Remote/fully online service delivery',
+                'Own and sell property (property developers)',
+                'Broker overseas property',
+                'Part of group structure/multiple entities',
+                'Foreign branches or operations',
+                'Deal with virtual assets'
+            ];
+            
+            hardDisqualifiers.forEach(disqualifier => {
+                if (businessComplexity.includes(disqualifier)) {
+                    starterKitDisqualifiers.push(disqualifier);
+                }
+            });
+
+            if (starterKitDisqualifiers.length > 0) {
+                return {
+                    package: 'package2',
+                    title: 'Package 2: AML/CTF Consultant + VerifiMe Support',
+                    message: `Your business requires a customized AML/CTF program beyond the Starter Kit due to the following factors: ${starterKitDisqualifiers.join(', ')}. We recommend working with our specialist AML/CTF consultants alongside VerifiMe's identity verification platform.`,
+                    features: [
+                        'Full AML/CTF consultant partnership',
+                        'Customized AML/CTF program development',
+                        'Comprehensive risk assessment',
+                        'VerifiMe identity verification platform',
+                        'Advanced compliance framework',
+                        'Ongoing advisory support',
+                        'Tailored training programs'
+                    ],
+                    color: 'bg-purple-50 border-purple-300',
+                    icon: '★'
+                };
+            }
+
+            let complexityFactors = 0;
+            
+            const customerBase = answers.customerBase || [];
+            if (customerBase.length > 1 || (customerBase.length === 1 && customerBase[0] !== 'Primarily Australian individual customers')) {
+                complexityFactors++;
+            }
+            
+            if (businessComplexity.includes('Regular high-risk customers (PEPs, sanctioned)')) {
+                complexityFactors++;
+            }
+            if (businessComplexity.includes('Complex ownership structures')) {
+                complexityFactors++;
+            }
+
+            if (complexityFactors === 0 || complexityFactors === 1) {
+                return {
+                    package: 'package1',
+                    title: 'Package 1: Starter Kit + VerifiMe Support',
+                    message: 'Your business appears to be a good fit for AUSTRAC\'s Starter Kit program with VerifiMe support. You have a relatively simple structure that can benefit from our streamlined compliance solution.',
+                    features: [
+                        'AUSTRAC Starter Kit as foundation',
+                        'VerifiMe identity verification platform',
+                        'Implementation support and guidance',
+                        'Basic training and education resources',
+                        'Customer due diligence tools',
+                        'Ongoing technical support'
+                    ],
+                    color: 'bg-green-50 border-green-300',
+                    icon: '✓'
+                };
+            } else {
+                return {
+                    package: 'package2',
+                    title: 'Package 2: AML/CTF Consultant + VerifiMe Support',
+                    message: 'Your business has complexity factors that require a customized AML/CTF program. We recommend working with our specialist AML/CTF consultants alongside VerifiMe\'s identity verification platform.',
+                    features: [
+                        'Full AML/CTF consultant partnership',
+                        'Customized AML/CTF program development',
+                        'Comprehensive risk assessment',
+                        'VerifiMe identity verification platform',
+                        'Advanced compliance framework',
+                        'Ongoing advisory support',
+                        'Tailored training programs'
+                    ],
+                    color: 'bg-purple-50 border-purple-300',
+                    icon: '★'
+                };
+            }
+        }
+
+        function handleAnswer(questionId, value, isMulti) {
+            if (isMulti) {
+                const current = answers[questionId] || [];
+                const updated = current.includes(value)
+                    ? current.filter(item => item !== value)
+                    : [...current, value];
+                answers[questionId] = updated;
+            } else {
+                answers[questionId] = value;
+            }
+            render();
+        }
+
+        function handleNext() {
+            if (currentStep < questions.length - 1) {
+                currentStep++;
+            } else {
+                showResult = true;
+            }
+            render();
+        }
+
+        function handleBack() {
+            if (currentStep > 0) {
+                currentStep--;
+            }
+            render();
+        }
+
+        function handleReset() {
+            currentStep = 0;
+            answers = {};
+            showResult = false;
+            render();
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            
+            if (showResult) {
+                const result = determinePackage();
+                app.innerHTML = `
+                    <div class="min-h-screen py-12 px-4">
+                        <div class="max-w-4xl mx-auto">
+                            <div class="${result.color} border-2 rounded-lg p-8 shadow-lg">
+                                <div class="text-center mb-6">
+                                    <div class="text-6xl mb-4">${result.icon || '📋'}</div>
+                                    <h2 class="text-3xl font-bold text-gray-800 mb-3">${result.title}</h2>
+                                    <p class="text-lg text-gray-700">${result.message}</p>
+                                </div>
+
+                                ${result.features ? `
+                                    <div class="mt-8 bg-white rounded-lg p-6 shadow-md">
+                                        <h3 class="text-xl font-semibold mb-4 text-gray-800">What's Included:</h3>
+                                        <ul class="space-y-3">
+                                            ${result.features.map(feature => `
+                                                <li class="flex items-start">
+                                                    <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                    </svg>
+                                                    <span class="text-gray-700">${feature}</span>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
+
+                                <div class="mt-8 flex gap-4 justify-center">
+                                    <button onclick="handleReset()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">
+                                        Start Over
+                                    </button>
+                                    <button class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                                        Contact Us for Assessment
+                                    </button>
+                                </div>
+
+                                <div class="mt-8 text-center text-sm text-gray-600">
+                                    <p>Important: This is a preliminary assessment only. Final compliance requirements should be confirmed with AUSTRAC guidance and professional advice.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const currentQuestion = questions[currentStep];
+            const currentOptions = currentQuestion.type === 'dynamic-multi-select' 
+                ? getDesignatedServicesForIndustries()
+                : currentQuestion.options || [];
+
+            const isAnswered = (currentQuestion.type === 'multi-select' || currentQuestion.type === 'dynamic-multi-select')
+                ? (answers[currentQuestion.id] && answers[currentQuestion.id].length > 0)
+                : answers[currentQuestion.id];
+
+            app.innerHTML = `
+                <div class="min-h-screen py-12 px-4">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="text-center mb-8">
+                            <h1 class="text-4xl font-bold text-gray-800 mb-3">
+                                AUSTRAC Tranche 2 Compliance Assessment
+                            </h1>
+                            <p class="text-lg text-gray-600">
+                                Find out which compliance package is right for your business
+                            </p>
+                        </div>
+
+                        <div class="mb-8">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700">
+                                    Question ${currentStep + 1} of ${questions.length}
+                                </span>
+                                <span class="text-sm font-medium text-gray-700">
+                                    ${Math.round(((currentStep + 1) / questions.length) * 100)}% Complete
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" 
+                                     style="width: ${((currentStep + 1) / questions.length) * 100}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
+                            <div class="flex items-start mb-6">
+                                <div class="flex-1">
+                                    <h2 class="text-2xl font-bold text-gray-800 mb-2">
+                                        ${currentQuestion.question}
+                                    </h2>
+                                    ${currentQuestion.description ? `
+                                        <p class="text-gray-600 text-sm">${currentQuestion.description}</p>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                ${currentOptions.length === 0 && currentQuestion.type === 'dynamic-multi-select' ? `
+                                    <div class="text-center py-8 text-gray-500">
+                                        <p>Please select at least one industry in Question 1 to see relevant designated services.</p>
+                                    </div>
+                                ` : currentOptions.map((option, idx) => {
+                                    const isMulti = currentQuestion.type === 'multi-select' || currentQuestion.type === 'dynamic-multi-select';
+                                    const selected = isMulti 
+                                        ? (answers[currentQuestion.id] || []).includes(option)
+                                        : answers[currentQuestion.id] === option;
+                                    
+                                    return `
+                                        <button onclick="handleAnswer('${currentQuestion.id}', '${option.replace(/'/g, "\\'")}', ${isMulti})"
+                                            class="w-full text-left p-4 rounded-lg border-2 transition-all ${
+                                                selected
+                                                    ? 'border-indigo-600 bg-indigo-50'
+                                                    : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
+                                            }">
+                                            <div class="flex items-center">
+                                                <div class="w-5 h-5 ${isMulti ? 'rounded' : 'rounded-full'} border-2 mr-3 flex items-center justify-center ${
+                                                    selected
+                                                        ? 'border-indigo-600 bg-indigo-600'
+                                                        : 'border-gray-300'
+                                                }">
+                                                    ${selected ? (isMulti 
+                                                        ? '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                                                        : '<div class="w-2 h-2 bg-white rounded-full"></div>'
+                                                    ) : ''}
+                                                </div>
+                                                <span class="text-gray-800 font-medium">${option}</span>
+                                            </div>
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <button onclick="handleBack()" 
+                                ${currentStep === 0 ? 'disabled' : ''}
+                                class="px-6 py-3 rounded-lg font-medium transition-colors ${
+                                    currentStep === 0
+                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        : 'bg-gray-600 text-white hover:bg-gray-700'
+                                }">
+                                Back
+                            </button>
+                            <button onclick="handleNext()"
+                                ${!isAnswered ? 'disabled' : ''}
+                                class="px-6 py-3 rounded-lg font-medium transition-colors flex items-center ${
+                                    !isAnswered
+                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                }">
+                                ${currentStep === questions.length - 1 ? 'See Results' : 'Next'}
+                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="mt-8 text-center text-sm text-gray-600">
+                            <p>Need help? Contact us at support@verifime.com.au</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initial render
+        render();
+    </script>
+</body>
+</html>
