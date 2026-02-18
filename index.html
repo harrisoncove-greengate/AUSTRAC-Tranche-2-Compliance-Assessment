@@ -75,65 +75,215 @@
     };
 
     const questions = [
-      { id: 'industry', question: 'What industry do you belong to?', type: 'multi-select', options: ['Real Estate Professionals','Conveyancers','Lawyers','Accountants','Trust & Company Service Providers','Dealers in Precious Metals/Stones','Virtual Asset Service Providers','Other Professional Services'] },
-      { id: 'designatedServices', question: 'Do you provide any of these designated services?', type: 'dynamic-multi-select', description: 'Select all services that your business provides' },
-      { id: 'staffSize', question: 'How many personnel work in your business?', type: 'single', description: 'Include all administrative and professional staff', options: ['15 or fewer', 'More than 15'] },
-      { id: 'customerBase', question: 'Which best describes your customer base?', type: 'multi-select', description: 'Select all that apply to your business', options: ['Primarily Australian individual customers','Mix of individuals and corporate clients','Primarily corporate/trust clients','Significant international client base'] },
-      { id: 'businessComplexity', question: 'Does your business have any of these characteristics?', type: 'multi-select', options: ['Remote/fully online service delivery','Own and sell property (property developers)','Broker overseas property','Part of group structure/multiple entities','Foreign branches or operations','Regular high-risk customers (PEPs, sanctioned)','Deal with virtual assets','Complex ownership structures','None of the above'] },
-      { id: 'enrolled', question: 'Have you enrolled with AUSTRAC?', type: 'single', description: 'Enrollment opens 31 March 2026, deadline 29 July 2026', options: ['Yes', 'No', 'Planning to enroll'] },
-      { id: 'riskAssessment', question: 'Have you completed a business risk assessment?', type: 'single', description: 'ML/TF/PF risk assessment covering customers, services, channels, and jurisdictions', options: ['Yes - Completed','Partial - Started','No - Not started','Unsure'] },
-      { id: 'training', question: 'Have you or your staff completed AML/CTF training?', type: 'single', options: ['Yes - Comprehensive','Partial - Some staff','No - Not yet','Minimal - Basic awareness only'] }
+      {
+        id: 'industry',
+        question: 'What industry do you belong to?',
+        type: 'multi-select',
+        options: [
+          'Real Estate Professionals',
+          'Conveyancers',
+          'Lawyers',
+          'Accountants',
+          'Trust & Company Service Providers',
+          'Dealers in Precious Metals/Stones',
+          'Virtual Asset Service Providers',
+          'Other Professional Services'
+        ]
+      },
+      {
+        id: 'designatedServices',
+        question: 'Do you provide any of these designated services?',
+        type: 'dynamic-multi-select',
+        description: 'Select all services that your business provides'
+      },
+      {
+        id: 'staffSize',
+        question: 'How many personnel work in your business?',
+        type: 'single',
+        description: 'Include all administrative and professional staff',
+        options: ['15 or fewer', 'More than 15']
+      },
+      {
+        id: 'customerBase',
+        question: 'Which best describes your customer base?',
+        type: 'multi-select',
+        description: 'Select all that apply to your business',
+        options: [
+          'Primarily Australian individual customers',
+          'Mix of individuals and corporate clients',
+          'Primarily corporate/trust clients',
+          'Significant international client base'
+        ]
+      },
+      {
+        id: 'businessComplexity',
+        question: 'Does your business have any of these characteristics?',
+        type: 'multi-select',
+        options: [
+          'Remote/fully online service delivery',
+          'Own and sell property (property developers)',
+          'Broker overseas property',
+          'Part of group structure/multiple entities',
+          'Foreign branches or operations',
+          'Regular high-risk customers (PEPs, sanctioned)',
+          'Deal with virtual assets',
+          'Complex ownership structures',
+          'None of the above'
+        ]
+      },
+      {
+        id: 'enrolled',
+        question: 'Have you enrolled with AUSTRAC?',
+        type: 'single',
+        description: 'Enrollment opens 31 March 2026, deadline 29 July 2026',
+        options: ['Yes', 'No', 'Planning to enroll']
+      },
+      {
+        id: 'riskAssessment',
+        question: 'Have you completed a business risk assessment?',
+        type: 'single',
+        description: 'ML/TF/PF risk assessment covering customers, services, channels, and jurisdictions',
+        options: ['Yes - Completed', 'Partial - Started', 'No - Not started', 'Unsure']
+      },
+      {
+        id: 'training',
+        question: 'Have you or your staff completed AML/CTF training?',
+        type: 'single',
+        options: ['Yes - Comprehensive', 'Partial - Some staff', 'No - Not yet', 'Minimal - Basic awareness only']
+      }
     ];
 
-    let currentStep = 0, answers = {}, showResult = false;
+    let currentStep = 0;
+    let answers = {};
+    let showResult = false;
 
     function getDesignatedServicesForIndustries() {
       const selected = answers.industry || [];
-      if (!selected.length) return [];
-      return [...new Set(selected.flatMap(ind => designatedServicesByIndustry[ind] || []))];
+      if (selected.length === 0) return [];
+      const all = selected.flatMap(ind => designatedServicesByIndustry[ind] || []);
+      return [...new Set(all)];
     }
 
     function determinePackage() {
       const designatedServices = answers.designatedServices || [];
-      if (!designatedServices.length) return { package:'none', title:'AML/CTF Obligations May Not Apply', message:'Based on your responses, you may not be providing designated services under Tranche 2. However, we recommend confirming this with AUSTRAC.', color:'bg-gray-50 border-gray-300', icon:'📋' };
+      if (designatedServices.length === 0) {
+        return {
+          package: 'none',
+          title: 'AML/CTF Obligations May Not Apply',
+          message: 'Based on your responses, you may not be providing designated services under Tranche 2. However, we recommend confirming this with AUSTRAC.',
+          color: 'bg-gray-50 border-gray-300',
+          icon: '📋'
+        };
+      }
+
       const starterDisqual = [];
-      if (answers.staffSize==='More than 15') starterDisqual.push('More than 15 staff');
+      if (answers.staffSize === 'More than 15') starterDisqual.push('More than 15 staff');
       const complexity = answers.businessComplexity || [];
-      const hardDisq = ['Remote/fully online service delivery','Own and sell property (property developers)','Broker overseas property','Part of group structure/multiple entities','Foreign branches or operations','Deal with virtual assets'];
-      hardDisq.forEach(i=>{ if(complexity.includes(i)) starterDisqual.push(i); });
-      if (starterDisqual.length) return { package:'package2', title:'Package 2: AML/CTF Consultant + VerifiMe Support', message:`Your business requires a customised AML/CTF program due to: ${starterDisqual.join(', ')}.`, features:['Full AML/CTF consultant partnership','Custom AML/CTF program development','Comprehensive risk assessment','VerifiMe identity verification platform','Advanced compliance framework','Ongoing advisory support','Tailored training programs'], color:'bg-purple-50 border-purple-300', icon:'★' };
-      let factors = 0; const customerBase = answers.customerBase || [];
-      if(customerBase.length>1 || (customerBase.length===1 && customerBase[0]!=='Primarily Australian individual customers')) factors++;
-      if(complexity.includes('Regular high-risk customers (PEPs, sanctioned)')) factors++;
-      if(complexity.includes('Complex ownership structures')) factors++;
-      if(factors<=1) return { package:'package1', title:'Package 1: Starter Kit + VerifiMe Support', message:'Your business appears to be a good fit for the AUSTRAC Starter Kit program with VerifiMe support.', features:['AUSTRAC starter kit foundation','VerifiMe identity verification platform','Implementation support','Basic training resources','Customer due diligence tools','Ongoing technical support'], color:'bg-green-50 border-green-300', icon:'✓' };
-      return { package:'package2', title:'Package 2: AML/CTF Consultant + VerifiMe Support', message:'Your business has complexity factors and needs a customised AML/CTF program.', features:['Full AML/CTF consultant partnership','Custom AML/CTF program development','Comprehensive risk assessment','VerifiMe identity verification platform','Advanced compliance framework','Ongoing advisory support','Tailored training programs'], color:'bg-purple-50 border-purple-300', icon:'★' };
+      const hardDisq = [
+        'Remote/fully online service delivery',
+        'Own and sell property (property developers)',
+        'Broker overseas property',
+        'Part of group structure/multiple entities',
+        'Foreign branches or operations',
+        'Deal with virtual assets'
+      ];
+      hardDisq.forEach(item => { if (complexity.includes(item)) starterDisqual.push(item); });
+
+      if (starterDisqual.length > 0) {
+        return {
+          package: 'package2',
+          title: 'Package 2: AML/CTF Consultant + VerifiMe Support',
+          message: `Your business requires a customised AML/CTF program due to: ${starterDisqual.join(', ')}.`,
+          features: [
+            'Full AML/CTF consultant partnership',
+            'Custom AML/CTF program development',
+            'Comprehensive risk assessment',
+            'VerifiMe identity verification platform',
+            'Advanced compliance framework',
+            'Ongoing advisory support',
+            'Tailored training programs'
+          ],
+          color: 'bg-purple-50 border-purple-300',
+          icon: '★'
+        };
+      }
+
+      let factors = 0;
+      const customerBase = answers.customerBase || [];
+      if (customerBase.length > 1 || (customerBase.length === 1 && customerBase[0] !== 'Primarily Australian individual customers')) factors++;
+      if (complexity.includes('Regular high-risk customers (PEPs, sanctioned)')) factors++;
+      if (complexity.includes('Complex ownership structures')) factors++;
+
+      if (factors <= 1) {
+        return {
+          package: 'package1',
+          title: 'Package 1: Starter Kit + VerifiMe Support',
+          message: 'Your business appears to be a good fit for the AUSTRAC Starter Kit program with VerifiMe support.',
+          features: [
+            'AUSTRAC starter kit foundation',
+            'VerifiMe identity verification platform',
+            'Implementation support',
+            'Basic training resources',
+            'Customer due diligence tools',
+            'Ongoing technical support'
+          ],
+          color: 'bg-green-50 border-green-300',
+          icon: '✓'
+        };
+      }
+
+      return {
+        package: 'package2',
+        title: 'Package 2: AML/CTF Consultant + VerifiMe Support',
+        message: 'Your business has complexity factors and needs a customised AML/CTF program.',
+        features: [
+          'Full AML/CTF consultant partnership',
+          'Custom AML/CTF program development',
+          'Comprehensive risk assessment',
+          'VerifiMe identity verification platform',
+          'Advanced compliance framework',
+          'Ongoing advisory support',
+          'Tailored training programs'
+        ],
+        color: 'bg-purple-50 border-purple-300',
+        icon: '★'
+      };
     }
 
-    function buildFormsContextParam() { return "?context="+encodeURIComponent(JSON.stringify({ package: determinePackage().package, industry: answers.industry||[], services:(answers.designatedServices||[]).length })); }
+    function handleAnswer(questionId, value, isMulti) {
+      if (isMulti) {
+        let current = answers[questionId] || [];
+        if (questionId === 'businessComplexity') {
+          if (value === 'None of the above') {
+            current = ['None of the above'];
+          } else {
+            current = current.filter(v => v !== 'None of the above');
+            current = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
+          }
+        } else {
+          current = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
+        }
+        answers[questionId] = current;
+      } else {
+        answers[questionId] = value;
+      }
 
-    function handleAnswer(qid,val,isMulti){
-      if(isMulti){
-        let cur = answers[qid]||[];
-        if(qid==='businessComplexity'){
-          if(val==='None of the above') cur=['None of the above']; else { cur=cur.filter(v=>v!=='None of the above'); cur=cur.includes(val)?cur.filter(v=>v!==val):[...cur,val]; }
-        } else { cur=cur.includes(val)?cur.filter(v=>v!==val):[...cur,val]; }
-        answers[qid]=cur;
-      } else answers[qid]=val;
-      if(qid==='industry'){ const valid=new Set(getDesignatedServicesForIndustries()); answers.designatedServices=(answers.designatedServices||[]).filter(s=>valid.has(s)); }
+      if (questionId === 'industry') {
+        const valid = new Set(getDesignatedServicesForIndustries());
+        answers.designatedServices = (answers.designatedServices || []).filter(s => valid.has(s));
+      }
       render();
     }
 
-    function handleNext(){ if(currentStep<questions.length-1) currentStep++; else showResult=true; render(); }
-    function handleBack(){ if(currentStep>0) currentStep--; render(); }
-    function handleReset(){ currentStep=0; answers={}; showResult=false; render(); }
+    function handleNext() { if (currentStep < questions.length - 1) { currentStep++; } else { showResult = true; } render(); }
+    function handleBack() { if (currentStep > 0) currentStep--; render(); }
+    function handleReset() { currentStep = 0; answers = {}; showResult = false; render(); }
 
-    function render(){
-      const app=document.getElementById('app');
-      if(showResult){
-        const result=determinePackage();
-        const microsoftFormsHref=MICROSOFT_FORMS_URL+buildFormsContextParam();
-        app.innerHTML=`
+    function render() {
+      const app = document.getElementById('app');
+      if (showResult) {
+        const result = determinePackage();
+        app.innerHTML = `
           <div class="min-h-screen py-12 px-4">
             <div class="max-w-4xl mx-auto">
               <div class="${result.color} border-2 rounded-lg p-8 shadow-lg">
@@ -142,18 +292,29 @@
                   <h2 class="text-3xl font-bold text-gray-800 mb-3">${result.title}</h2>
                   <p class="text-lg text-gray-700">${result.message}</p>
                 </div>
-                ${result.features?`
+                ${result.features ? `
                 <div class="mt-8 bg-white rounded-lg p-6 shadow-md">
                   <h3 class="text-xl font-semibold mb-4 text-gray-800">What's Included:</h3>
                   <ul class="space-y-3">
-                    ${result.features.map(f=>`<li class="flex items-start"><svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span class="text-gray-700">${f}</span></li>`).join("")}
+                    ${result.features.map(f => `<li class="flex items-start">
+                      <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      <span class="text-gray-700">${f}</span>
+                    </li>`).join('')}
                   </ul>
-                </div>`:''}
+                </div>` : ''}
                 <div class="mt-8 flex gap-4 justify-center">
-                  <button onclick="handleReset()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">Start Over</button>
-                  <a href="${microsoftFormsHref}" target="_blank" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">Contact Us for Assessment</a>
+                  <button onclick="handleReset()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">
+                    Start Over
+                  </button>
+                  <a href="${MICROSOFT_FORMS_URL}" target="_blank" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors flex items-center">
+                    Contact Us for Assessment
+                  </a>
                 </div>
-                <div class="mt-8 text-center text-sm text-gray-600"><p>Important: This is a preliminary assessment only. Confirm requirements with AUSTRAC.</p></div>
+                <div class="mt-8 text-center text-sm text-gray-600">
+                  <p>Important: This is a preliminary assessment only. Confirm requirements with AUSTRAC.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -161,11 +322,11 @@
         return;
       }
 
-      const q=questions[currentStep];
-      const currentOptions=q.type==='dynamic-multi-select'?getDesignatedServicesForIndustries():q.options;
-      const isAnswered=(q.type==='multi-select'||q.type==='dynamic-multi-select')?(answers[q.id]&&answers[q.id].length>0):answers[q.id];
+      const q = questions[currentStep];
+      const currentOptions = q.type === "dynamic-multi-select" ? getDesignatedServicesForIndustries() : q.options;
+      const isAnswered = (q.type.includes('multi')) ? (answers[q.id] && answers[q.id].length > 0) : answers[q.id];
 
-      app.innerHTML=`
+      app.innerHTML = `
         <div class="min-h-screen py-12 px-4">
           <div class="max-w-3xl mx-auto">
             <div class="text-center mb-8">
@@ -174,34 +335,43 @@
             </div>
             <div class="mb-8">
               <div class="flex justify-between mb-2">
-                <span class="text-sm font-medium text-gray-700">Question ${currentStep+1} of ${questions.length}</span>
-                <span class="text-sm font-medium text-gray-700">${Math.round(((currentStep+1)/questions.length)*100)}% Complete</span>
+                <span class="text-sm font-medium text-gray-700">Question ${currentStep + 1} of ${questions.length}</span>
+                <span class="text-sm font-medium text-gray-700">${Math.round(((currentStep + 1) / questions.length) * 100)}% Complete</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width:${(currentStep+1)/questions.length*100}%"></div>
+                <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: ${(currentStep + 1)/questions.length*100}%"></div>
               </div>
             </div>
             <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
               <h2 id="question-heading" tabindex="-1" class="text-2xl font-bold text-gray-800 mb-2">${q.question}</h2>
-              ${q.description?`<p class="text-gray-600 text-sm">${q.description}</p>`:''}
+              ${q.description ? `<p class="text-gray-600 text-sm">${q.description}</p>` : ''}
               <div class="mt-6 space-y-3">
-                ${currentOptions&&currentOptions.length?currentOptions.map(option=>{
-                  const isMulti=q.type.includes('multi');
-                  const selected=isMulti?(answers[q.id]||[]).includes(option):answers[q.id]===option;
-                  const safe=option.replace(/'/g,"\\'");
-                  return `<button onclick="handleAnswer('${q.id}','${safe}',${isMulti})" class="w-full text-left p-4 rounded-lg border-2 transition-all ${selected?'border-indigo-600 bg-indigo-50':'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'}"><div class="flex items-center"><div class="w-5 h-5 ${isMulti?'rounded':'rounded-full'} border-2 mr-3 flex items-center justify-center ${selected?'border-indigo-600 bg-indigo-600':'border-gray-300'}">${selected?(isMulti?'<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>':'<div class="w-2 h-2 bg-white rounded-full"></div>'):""}</div><span class="text-gray-800 font-medium">${option}</span></div></button>`;
-                }).join(''):`<div class="text-center py-8 text-gray-500">Please select at least one industry in Question 1 to see relevant services.</div>`}
+                ${currentOptions && currentOptions.length ? currentOptions.map(option => {
+                  const isMulti = q.type.includes("multi");
+                  const selected = isMulti ? (answers[q.id] || []).includes(option) : answers[q.id] === option;
+                  const safe = option.replace(/'/g,"\\'");
+                  return `
+                    <button onclick="handleAnswer('${q.id}','${safe}',${isMulti})" class="w-full text-left p-4 rounded-lg border-2 transition-all ${selected ? 'border-indigo-600 bg-indigo-50' : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'}">
+                      <div class="flex items-center">
+                        <div class="w-5 h-5 ${isMulti ? "rounded" : "rounded-full"} border-2 mr-3 flex items-center justify-center ${selected ? "border-indigo-600 bg-indigo-600" : "border-gray-300"}">
+                          ${selected ? (isMulti ? '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' : '<div class="w-2 h-2 bg-white rounded-full"></div>') : ''}
+                        </div>
+                        <span class="text-gray-800 font-medium">${option}</span>
+                      </div>
+                    </button>
+                  `;
+                }).join('') : `<div class="text-center py-8 text-gray-500">Please select at least one industry in Question 1 to see relevant services.</div>`}
               </div>
             </div>
             <div class="flex justify-between">
-              <button onclick="handleBack()" ${currentStep===0?'disabled':''} class="px-6 py-3 rounded-lg font-medium ${currentStep===0?'bg-gray-300 text-gray-500 cursor-not-allowed':'bg-gray-600 text-white hover:bg-gray-700'}">Back</button>
-              <button onclick="handleNext()" ${!isAnswered?'disabled':''} class="px-6 py-3 rounded-lg font-medium flex items-center ${!isAnswered?'bg-gray-300 text-gray-500 cursor-not-allowed':'bg-indigo-600 text-white hover:bg-indigo-700'}">${currentStep===questions.length-1?'See Results':'Next'}<svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+              <button onclick="handleBack()" ${currentStep === 0 ? "disabled" : ""} class="px-6 py-3 rounded-lg font-medium ${currentStep===0 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-600 text-white hover:bg-gray-700"}">Back</button>
+              <button onclick="handleNext()" ${!isAnswered ? "disabled" : ""} class="px-6 py-3 rounded-lg font-medium flex items-center ${!isAnswered ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-indigo-600 text-white hover:bg-indigo-700"}">${currentStep === questions.length-1 ? "See Results" : "Next"}<svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
             </div>
             <div class="mt-8 text-center text-sm text-gray-600"><p>Need help? Contact us at support@verifime.com.au</p></div>
           </div>
         </div>
       `;
-      setTimeout(()=>{const h2=document.getElementById('question-heading'); if(h2) h2.focus();},0);
+      setTimeout(()=>{const h2=document.getElementById("question-heading"); if(h2) h2.focus();},0);
     }
 
     render();
