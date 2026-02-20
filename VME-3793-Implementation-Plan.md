@@ -10,7 +10,7 @@ This initiative aims to overhaul the existing notification process for PEP (Poli
 ## 1. Requirement Analysis
 
 ### Understanding & Goal
-The current PEP & sanction notification system sends generic alerts that provide insufficient context for the support team, the current “Advanced search” URLs to OpenSanctions trigger API limits, and staff are required to navigate to obvious false positives, the new email would be more intuitive and provide more information and ease of access to support staff, enabling immediate manual resolution by directly linking to the internal VerifiMe Admin Portal.
+The current PEP & sanction notification system sends generic alerts that provide insufficient context for the support team, the current “Advanced search” URLs to OpenSanctions trigger API limits, and staff are required to navigate to obvious false positives, the new email would be more intuitive and provide more information and ease of access to support staff, enabling immediate manual resolution by directly linking to the internal VerifiMe Admin Portal, the system does not parse the full identity information to the notification service, only the PEP match result, this is a primary area that needs to be changed.
 
 **Example of the current email:**  
 From: Verifime no-reply@verifime.com
