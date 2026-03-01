@@ -1,4 +1,6 @@
+
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -18,12 +20,14 @@
   <div id="app"></div>
 
   <script>
+    
     /******************************************************************
      * YOUR GOOGLE FORM URL
      ******************************************************************/
     const MICROSOFT_FORMS_URL =
       "https://docs.google.com/forms/d/e/1FAIpQLScjWIP6tDuxT_hcwW7LKf4GqggzjRJkUQYbcKIG6SqoFYTodw/viewform";
 
+    const STORAGE_KEY = "austrac_tranche2_assessment_v1";
     // ────────────────────────────────────────────────────────────────
     // Industry → Designated Services map
     // ────────────────────────────────────────────────────────────────
@@ -33,7 +37,7 @@
         'Assisting in the planning or execution of a transaction to sell, buy or transfer a body corporate or legal arrangement ',
         "Receiving, holding, controlling or managing a persons property to help in the planning or execution of a transaction ",
         "Assisting in organising, planning, or executing a transaction for equity or debt financing relating to a body corporate or legal arrangement ",
-        "Sselling or transferring a shelf company ",
+        "Selling or transferring a shelf company ",
         "Assisting in the planning or execution of the creation or restructuring a body corporate or legal arrangement ",
         "Acting, or arranging for someone to act on behalf of a person in particular positions in a body corporate or legal arrangement ",
         "Providing a registered office address or principal place of business address of a body corporate or legal arrangement "
@@ -175,6 +179,26 @@
     let answers = {};
     let showResult = false;
 
+    function saveProgress() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        currentStep,
+        answers,
+        showResult
+      }));
+    }
+
+    function loadProgress() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      try {
+        const data = JSON.parse(saved);
+        currentStep = data.currentStep || 0;
+        answers = data.answers || {};
+        showResult = data.showResult || false;
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
     // ────────────────────────────────────────────────────────────────
     // Helper Functions
     // ────────────────────────────────────────────────────────────────
@@ -324,7 +348,7 @@
         const valid = new Set(getDesignatedServicesForIndustries());
         answers.designatedServices = (answers.designatedServices || []).filter(s => valid.has(s));
       }
-
+      saveProgress();
       render();
     }
 
@@ -334,11 +358,13 @@
       } else {
         showResult = true;
       }
+      saveProgress();
       render();
     }
 
     function handleBack() {
       if (currentStep > 0) currentStep--;
+      saveProgress();
       render();
     }
 
@@ -346,6 +372,7 @@
       currentStep = 0;
       answers = {};
       showResult = false;
+      localStorage.removeItem(STORAGE_KEY);
       render();
     }
 
@@ -388,7 +415,12 @@
                     Start Over
                   </button>
 
+                  <a href="workshop.html" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">
+                    Workshop Info.
+                  </a>
+
                   <a href="${googleFormsHref}" target="_blank"
+                    onclick="localStorage.removeItem(STORAGE_KEY);"
                     class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
                     Contact Us for Assessment
                   </a>
@@ -524,7 +556,7 @@
         if (h2) h2.focus();
       }, 0);
     }
-
+    loadProgress();
     render();
   </script>
 </body>
