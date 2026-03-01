@@ -29,8 +29,14 @@
     // ────────────────────────────────────────────────────────────────
     const designatedServicesByIndustry = {
       'Real Estate Professionals': [
-        'Brokering the sale, purchase or transfer of real estate',
-        'Selling or transferring real estate without an independent agent'
+        'Assisting in the planning or execution of a transaction to sell, buy or transfer real estate',
+        'Assisting in the planning or execution of a transaction to sell, buy or transfer a body corporate or legal arrangement ',
+        "Receiving, holding, controlling or managing a persons property to help in the planning or execution of a transaction ",
+        "Assisting in organising, planning, or executing a transaction for equity or debt financing relating to a body corporate or legal arrangement ",
+        "Sselling or transferring a shelf company ",
+        "Assisting in the planning or execution of the creation or restructuring a body corporate or legal arrangement ",
+        "Acting, or arranging for someone to act on behalf of a person in particular positions in a body corporate or legal arrangement ",
+        "Providing a registered office address or principal place of business address of a body corporate or legal arrangement "
       ],
       'Conveyancers': [
         'Assisting in planning/executing transactions to sell, buy or transfer real estate',
@@ -103,7 +109,7 @@
         id: 'designatedServices',
         question: 'Do you provide any of these designated services?',
         type: 'dynamic-multi-select',
-        description: 'Select all services that your business provides'
+        description: 'Select all services that apply'
       },
       {
         id: 'staffSize',
