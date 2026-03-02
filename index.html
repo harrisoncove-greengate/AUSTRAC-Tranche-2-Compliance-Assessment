@@ -1,6 +1,4 @@
-
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -20,49 +18,49 @@
   <div id="app"></div>
 
   <script>
-    
     /******************************************************************
      * YOUR GOOGLE FORM URL
      ******************************************************************/
     const MICROSOFT_FORMS_URL =
       "https://docs.google.com/forms/d/e/1FAIpQLScjWIP6tDuxT_hcwW7LKf4GqggzjRJkUQYbcKIG6SqoFYTodw/viewform";
-
-    const STORAGE_KEY = "austrac_tranche2_assessment_v1";
+      const COMPANY_LOGO_URL = "Standard-VerifiMe-Logo-Normal.png";
     // ────────────────────────────────────────────────────────────────
     // Industry → Designated Services map
     // ────────────────────────────────────────────────────────────────
     const designatedServicesByIndustry = {
       'Real Estate Professionals': [
-        'Assisting in the planning or execution of a transaction to sell, buy or transfer real estate',
-        'Assisting in the planning or execution of a transaction to sell, buy or transfer a body corporate or legal arrangement ',
-        "Receiving, holding, controlling or managing a persons property to help in the planning or execution of a transaction ",
-        "Assisting in organising, planning, or executing a transaction for equity or debt financing relating to a body corporate or legal arrangement ",
-        "Selling or transferring a shelf company ",
-        "Assisting in the planning or execution of the creation or restructuring a body corporate or legal arrangement ",
-        "Acting, or arranging for someone to act on behalf of a person in particular positions in a body corporate or legal arrangement ",
-        "Providing a registered office address or principal place of business address of a body corporate or legal arrangement "
+        'Brokering the sale, purchase or transfer of real estate',
+        'Selling or transferring real estate without an independent agent'
       ],
       'Conveyancers': [
-        'Assisting in planning/executing transactions to sell, buy or transfer real estate',
-        'Preparing contracts, transfer documents, or lodging registrations',
-        'Acting as settlement agent for property transfers'
+        'Assisting in the planning or execution of a transaction to sell, buy or transfer real estate',
+        'Assisting in the planning or execution of a transaction to sell, buy or transfer a body corporate or legal arrangement',
+        'Receiving, holding, controlling or managing a persons property to help in the planning or execution of a transaction',
+        'Assisting in organising, planning, or executing a transaction for equity or debt financing relating to a body corporate or legal arrangement',
+        'Selling or transferring a shelf company',
+        'Assisting in the planning or execution of the creation or restructuring a body corporate or legal arrangement',
+        'Acting, or arranging for someone to act on behalf of a person in particular positions in a body corporate or legal arrangement',
+        'Providing a registered office address or principal place of business address of a body corporate or legal arrangement'
       ],
       'Lawyers': [
-        'Assisting with real estate transactions (planning/execution)',
-        'Assisting with sale/transfer of body corporates or legal arrangements',
-        'Receiving/managing client funds for transactions',
-        'Equity or debt financing for companies/trusts',
-        'Creating or restructuring companies or legal arrangements',
-        'Acting as director, trustee, or partner on behalf of clients',
-        'Providing registered office or business addresses',
-        'Trust or company formation services'
+        'Assisting in the planning or execution of a transaction to sell, buy or transfer real estate',
+        'Assisting in the planning or execution of a transaction to sell, buy or transfer a body corporate or legal arrangement',
+        'Receiving, holding, controlling or managing a persons property to help in the planning or execution of a transaction',
+        'Assisting in organising, planning, or executing a transaction for equity or debt financing relating to a body corporate or legal arrangement',
+        'Selling or transferring a shelf company',
+        'Assisting in the planning or execution of the creation or restructuring a body corporate or legal arrangement',
+        'Acting, or arranging for someone to act on behalf of a person in particular positions in a body corporate or legal arrangement',
+        'Providing a registered office address or principal place of business address of a body corporate or legal arrangement'
       ],
       'Accountants': [
-        'Assisting with transactions involving bodies corporate or trusts',
-        'Receiving/managing client funds in connection with transactions',
-        'Trust and company formation services',
-        'Equity or debt financing services',
-        'Acting in official roles (director, trustee) for clients'
+        'Assisting in the planning or execution of a transaction to sell, buy or transfer real estate',
+        'Assisting in the planning or execution of a transaction to sell, buy or transfer a body corporate or legal arrangement',
+        'Receiving, holding, controlling or managing a persons property to help in the planning or execution of a transaction',
+        'Assisting in organising, planning, or executing a transaction for equity or debt financing relating to a body corporate or legal arrangement',
+        'Selling or transferring a shelf company',
+        'Assisting in the planning or execution of the creation or restructuring a body corporate or legal arrangement',
+        'Acting, or arranging for someone to act on behalf of a person in particular positions in a body corporate or legal arrangement',
+        'Providing a registered office address or principal place of business address of a body corporate or legal arrangement'
       ],
       'Trust & Company Service Providers': [
         'Creating or restructuring companies or legal arrangements',
@@ -70,23 +68,6 @@
         'Providing registered office addresses',
         'Company or trust formation services',
         'Managing client entities on their behalf'
-      ],
-      'Dealers in Precious Metals/Stones': [
-        'Buying/selling precious metals, stones or products with A$10,000+ in cash/virtual assets',
-        'Bullion sales of any value through any payment method'
-      ],
-      'Virtual Asset Service Providers': [
-        'Exchanges between virtual assets and fiat currency',
-        'Exchanges between different virtual assets',
-        'Transfer of virtual assets on behalf of customers',
-        'Safekeeping or administration of virtual assets',
-        'Financial services related to virtual assets'
-      ],
-      'Other Professional Services': [
-        'Assisting with property or corporate transactions',
-        'Managing client funds or property',
-        'Company/trust services',
-        'Please review AUSTRAC guidance for your specific services'
       ]
     };
 
@@ -103,17 +84,14 @@
           'Conveyancers',
           'Lawyers',
           'Accountants',
-          'Trust & Company Service Providers',
-          'Dealers in Precious Metals/Stones',
-          'Virtual Asset Service Providers',
-          'Other Professional Services'
+          'Trust & Company Service Providers'
         ]
       },
       {
         id: 'designatedServices',
         question: 'Do you provide any of these designated services?',
         type: 'dynamic-multi-select',
-        description: 'Select all services that apply'
+        description: 'Select all services that your business provides'
       },
       {
         id: 'staffSize',
@@ -152,10 +130,10 @@
       },
       {
         id: 'enrolled',
-        question: 'Have you enrolled with AUSTRAC?',
+        question: 'Are you planning to enroll with AUSTRAC?',
         type: 'single',
         description: 'Enrollment opens 31 March 2026, deadline 29 July 2026',
-        options: ['Yes', 'No', 'Planning to enroll']
+        options: ['Yes', 'No']
       },
       {
         id: 'riskAssessment',
@@ -178,27 +156,31 @@
     let currentStep = 0;
     let answers = {};
     let showResult = false;
+    const STORAGE_KEY = "austrac_tranche2_assessment_v1";
 
     function saveProgress() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        currentStep,
-        answers,
-        showResult
-      }));
-    }
+  const data = {
+    currentStep,
+    answers,
+    showResult
+  };
 
-    function loadProgress() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return;
-      try {
-        const data = JSON.parse(saved);
-        currentStep = data.currentStep || 0;
-        answers = data.answers || {};
-        showResult = data.showResult || false;
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadProgress() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return;
+
+  try {
+    const data = JSON.parse(saved);
+    currentStep = data.currentStep ?? 0;
+    answers = data.answers ?? {};
+    showResult = data.showResult ?? false;
+  } catch (e) {
+    console.error("Failed to load saved progress");
+  }
+}
     // ────────────────────────────────────────────────────────────────
     // Helper Functions
     // ────────────────────────────────────────────────────────────────
@@ -210,105 +192,105 @@
     }
 
     function determinePackage() {
-      const designatedServices = answers.designatedServices || [];
+  const designatedServices = answers.designatedServices || [];
 
-      if (designatedServices.length === 0) {
-        return {
-          package: 'none',
-          title: 'AML/CTF Obligations May Not Apply',
-          message:
-            'Based on your responses, you may not be providing designated services under Tranche 2. However, we recommend confirming this with AUSTRAC.',
-          color: 'bg-gray-50 border-gray-300',
-          icon: '📋'
-        };
-      }
+  if (designatedServices.length === 0) {
+    return {
+      package: 'none',
+      title: 'AML/CTF Obligations May Not Apply',
+      message:
+        'Based on your responses, you may not be providing designated services under Tranche 2. However, we recommend confirming this with AUSTRAC.',
+      color: 'bg-gray-50 border-gray-300',
+      icon: COMPANY_LOGO_URL
+    };
+  }
 
-      const starterDisqual = [];
+  const starterDisqual = [];
 
-      if (answers.staffSize === 'More than 15') {
-        starterDisqual.push('More than 15 staff');
-      }
+  if (answers.staffSize === 'More than 15') {
+    starterDisqual.push('More than 15 staff');
+  }
 
-      const complexity = answers.businessComplexity || [];
+  const complexity = answers.businessComplexity || [];
 
-      const hardDisq = [
-        'Remote/fully online service delivery',
-        'Own and sell property (property developers)',
-        'Broker overseas property',
-        'Part of group structure/multiple entities',
-        'Foreign branches or operations',
-        'Deal with virtual assets'
-      ];
+  const hardDisq = [
+    'Remote/fully online service delivery',
+    'Own and sell property (property developers)',
+    'Broker overseas property',
+    'Part of group structure/multiple entities',
+    'Foreign branches or operations',
+    'Deal with virtual assets'
+  ];
 
-      hardDisq.forEach(item => {
-        if (complexity.includes(item)) starterDisqual.push(item);
-      });
+  hardDisq.forEach(item => {
+    if (complexity.includes(item)) starterDisqual.push(item);
+  });
 
-      if (starterDisqual.length > 0) {
-        return {
-          package: 'package2',
-          title: 'Package 2: AML/CTF Consultant + VerifiMe Support',
-          message: `Your business requires a customised AML/CTF program due to: ${starterDisqual.join(', ')}.`,
-          features: [
-            'Full AML/CTF consultant partnership',
-            'Custom AML/CTF program development',
-            'Comprehensive risk assessment',
-            'VerifiMe identity verification platform',
-            'Advanced compliance framework',
-            'Ongoing advisory support',
-            'Tailored training programs'
-          ],
-          color: 'bg-purple-50 border-purple-300',
-          icon: '★'
-        };
-      }
+  if (starterDisqual.length > 0) {
+    return {
+      package: 'package2',
+      title: 'Package 2: AML/CTF Consultant + VerifiMe Support',
+      message: `Your business requires a customised AML/CTF program due to: ${starterDisqual.join(', ')}.`,
+      features: [
+        'Full AML/CTF consultant partnership',
+        'Custom AML/CTF program development',
+        'Comprehensive risk assessment',
+        'VerifiMe identity verification platform',
+        'Advanced compliance framework',
+        'Ongoing advisory support',
+        'Tailored training programs'
+      ],
+      color: 'bg-purple-50 border-purple-300',
+      icon: COMPANY_LOGO_URL
+    };
+  }
 
-      let factors = 0;
-      const customerBase = answers.customerBase || [];
+  let factors = 0;
+  const customerBase = answers.customerBase || [];
 
-      if (customerBase.length > 1 || (customerBase.length === 1 && customerBase[0] !== 'Primarily Australian individual customers')) {
-        factors++;
-      }
-      if (complexity.includes('Regular high-risk customers (PEPs, sanctioned)')) factors++;
-      if (complexity.includes('Complex ownership structures')) factors++;
+  if (customerBase.length > 1 || (customerBase.length === 1 && customerBase[0] !== 'Primarily Australian individual customers')) {
+    factors++;
+  }
+  if (complexity.includes('Regular high-risk customers (PEPs, sanctioned)')) factors++;
+  if (complexity.includes('Complex ownership structures')) factors++;
 
-      if (factors <= 1) {
-        return {
-          package: 'package1',
-          title: 'Package 1: Starter Kit + VerifiMe Support',
-          message:
-            'Your business appears to be a good fit for the AUSTRAC Starter Kit program with VerifiMe support.',
-          features: [
-            'AUSTRAC starter kit foundation',
-            'VerifiMe identity verification platform',
-            'Implementation support',
-            'Basic training resources',
-            'Customer due diligence tools',
-            'Ongoing technical support'
-          ],
-          color: 'bg-green-50 border-green-300',
-          icon: '✓'
-        };
-      }
+  if (factors <= 1) {
+    return {
+      package: 'package1',
+      title: 'Package 1: Starter Kit + VerifiMe Support',
+      message:
+        'Your business appears to be a good fit for the AUSTRAC Starter Kit program with VerifiMe support.',
+      features: [
+        'AUSTRAC starter kit foundation',
+        'VerifiMe identity verification platform',
+        'Implementation support',
+        'Basic training resources',
+        'Customer due diligence tools',
+        'Ongoing technical support'
+      ],
+      color: 'bg-green-50 border-green-300',
+      icon: COMPANY_LOGO_URL
+    };
+  }
 
-      return {
-        package: 'package2',
-        title: 'Package 2: AML/CTF Consultant + VerifiMe Support',
-        message:
-          'Your business has complexity factors and needs a customised AML/CTF program.',
-        features: [
-          'Full AML/CTF consultant partnership',
-          'Custom AML/CTF program development',
-          'Comprehensive risk assessment',
-          'VerifiMe identity verification platform',
-          'Advanced compliance framework',
-          'Ongoing advisory support',
-          'Tailored training programs'
-        ],
-        color: 'bg-purple-50 border-purple-300',
-        icon: '★'
-      };
-    }
+  return {
+    package: 'package2',
+    title: 'Package 2: AML/CTF Consultant + VerifiMe Support',
+    message:
+      'Your business has complexity factors and needs a customised AML/CTF program.',
+    features: [
+      'Full AML/CTF consultant partnership',
+      'Custom AML/CTF program development',
+      'Comprehensive risk assessment',
+      'VerifiMe identity verification platform',
+      'Advanced compliance framework',
+      'Ongoing advisory support',
+      'Tailored training programs'
+    ],
+    color: 'bg-purple-50 border-purple-300',
+    icon: COMPANY_LOGO_URL
+  };
+}
 
     function buildFormsContextParam() {
       const result = determinePackage();
@@ -389,7 +371,7 @@
             <div class="max-w-4xl mx-auto">
               <div class="${result.color} border-2 rounded-lg p-8 shadow-lg">
                 <div class="text-center mb-6">
-                  <div class="text-6xl mb-4">${result.icon}</div>
+                  <img src="${result.icon}" alt="Package Logo" class="mx-auto mb-4 w-56 h-auto" />
                   <h2 class="text-3xl font-bold text-gray-800 mb-3">${result.title}</h2>
                   <p class="text-lg text-gray-700">${result.message}</p>
                 </div>
@@ -415,14 +397,9 @@
                     Start Over
                   </button>
 
-                  <a href="workshop.html" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">
-                    Workshop Info.
-                  </a>
-
-                  <a href="${googleFormsHref}" target="_blank"
-                    onclick="localStorage.removeItem(STORAGE_KEY);"
-                    class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
-                    Contact Us for Assessment
+                  <a href="workshop.html" 
+                    class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">
+                    Workshop Info
                   </a>
                 </div>
 
@@ -452,6 +429,7 @@
         <div class="min-h-screen py-12 px-4">
           <div class="max-w-3xl mx-auto">
             <div class="text-center mb-8">
+              <img src="${COMPANY_LOGO_URL}" alt="Company Logo" class="mx-auto mb-4 w-56 h-auto" />
               <h1 class="text-4xl font-bold text-gray-800 mb-3">AUSTRAC Tranche 2 Compliance Assessment</h1>
               <p class="text-lg text-gray-600">Find out which compliance package is right for your business</p>
             </div>
